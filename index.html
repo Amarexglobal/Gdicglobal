@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLOBAL Tracking</title>
+
+<style>
+:root{
+  --bg:#8b0000;
+  --text:#ffffff;
+  --card:rgba(0,0,0,.28);
+  --gold:#ffd700;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at top,#c40000,#6e0000 70%);
+  color:var(--text);
+  overflow-x:hidden;
+}
+
+.container{
+  max-width:1000px;
+  margin:30px auto;
+  padding:20px;
+}
+
+.logo{
+  text-align:center;
+  font-size:42px;
+  font-weight:900;
+  letter-spacing:4px;
+  text-shadow:0 0 15px rgba(255,255,255,.35);
+  animation:glow 2s infinite alternate;
+}
+
+@keyframes glow{
+  from{
+    text-shadow:0 0 10px rgba(255,255,255,.2);
+  }
+  to{
+    text-shadow:0 0 25px rgba(255,255,255,.8);
+  }
+}
+
+.card{
+  background:var(--card);
+  padding:24px;
+  border-radius:18px;
+  margin-top:20px;
+  box-shadow:0 15px 40px rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+}
+
+h3{
+  margin-top:0;
+}
+
+input,button{
+  width:100%;
+  padding:13px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  font-size:15px;
+}
+
+input{
+  background:#fff;
+}
+
+button{
+  background:#000;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+  transition:.3s;
+}
+
+button:hover{
+  transform:scale(1.02);
+  background:#111;
+}
+
+.loader{
+  display:none;
+  margin-top:18px;
+  text-align:center;
+}
+
+.bar{
+  height:10px;
+  background:rgba(255,255,255,.2);
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:8px;
+}
+
+.bar i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#fff,#ffd700);
+  transition:width 2s linear;
+}
+
+/* RESULT */
+.result{
+  display:none;
+  margin-top:20px;
+  padding:20px;
+  border-radius:14px;
+  background:rgba(0,0,0,.28);
+  animation:fadeIn .7s ease;
+}
+
+@keyframes fadeIn{
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+.line{
+  opacity:0;
+  transform:translateY(8px);
+  transition:.4s;
+  margin:8px 0;
+}
+
+.line.show{
+  opacity:1;
+  transform:none;
+}
+
+/* BLINKING STATUS */
+.blink{
+  display:inline-block;
+  padding:5px 12px;
+  background:red;
+  border-radius:5px;
+  font-weight:900;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%{opacity:1}
+  50%{opacity:.35}
+  100%{opacity:1}
+}
+
+/* MAP SECTION */
+.map-box{
+  margin-top:25px;
+  background:rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:15px;
+  position:relative;
+  overflow:hidden;
+}
+
+.map-title{
+  text-align:center;
+  font-weight:800;
+  margin-bottom:10px;
+  letter-spacing:1px;
+}
+
+svg{
+  width:100%;
+  height:auto;
+}
+
+/* MAP LINE */
+.route{
+  stroke:var(--gold);
+  stroke-width:4;
+  fill:none;
+  stroke-dasharray:12;
+  animation:moveLine 1s linear infinite;
+  filter:drop-shadow(0 0 8px gold);
+}
+
+@keyframes moveLine{
+  from{
+    stroke-dashoffset:24;
+  }
+  to{
+    stroke-dashoffset:0;
+  }
+}
+
+/* LOCATION PULSE */
+.dot{
+  fill:#fff;
+  animation:pulse 1.2s infinite;
+}
+
+@keyframes pulse{
+  0%{
+    transform:scale(1);
+    opacity:1;
+  }
+  50%{
+    transform:scale(1.5);
+    opacity:.4;
+  }
+  100%{
+    transform:scale(1);
+    opacity:1;
+  }
+}
+
+.label{
+  fill:white;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  margin-top:16px;
+  opacity:.8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">GDIC</div>
+
+  <div class="card">
+
+    <h3>Track Your Shipment</h3>
+
+    <input id="code" placeholder="Enter tracking number">
+
+    <button onclick="track()">TRACK</button>
+
+    <div class="loader" id="loader">
+      Connecting to Global Shipment Database...
+      <div class="bar">
+        <i id="prog"></i>
+      </div>
+    </div>
+
+    <div class="result" id="result">
+
+      <h3>Shipment Details</h3>
+
+      <div id="details"></div>
+
+      <!-- MAP -->
+      <div class="map-box">
+
+        <div class="map-title">
+          LIVE ROUTE TRACKING
+        </div>
+
+        <svg viewBox="0 0 900 420">
+
+          <!-- Background -->
+          <rect width="900" height="420" fill="#111"/>
+
+          <!-- Yemen -->
+          <circle class="dot" cx="520" cy="120" r="7"/>
+          <text class="label" x="535" y="125">Yemen</text>
+
+          <!-- South Africa -->
+          <circle class="dot" cx="520" cy="320" r="7"/>
+          <text class="label" x="535" y="325">South Africa</text>
+
+          <!-- Botswana -->
+          <circle class="dot" cx="470" cy="270" r="7"/>
+          <text class="label" x="485" y="275">Botswana</text>
+
+          <!-- Animated Route -->
+          <path 
+            class="route"
+            d="M520 120 Q620 220 520 320 Q500 300 470 270"
+          />
+
+        </svg>
+
+      </div>
+
+    </div>
+
+    <div class="footer">
+      GDIC / Tracking Interface – Official Global Shipment System
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const TRACK_CODE = "XXUK92502";
+
+const DETAILS = [
+  "<b>Status:</b> <span class='blink'>IN TRANSIT</span>",
+  "<b>Origin:</b> Yemen",
+  "<b>Current Location:</b> Africa Air Transit Hub on route",
+  "<b>Destination:</b> Botswana",
+  "<b>Quantity:</b> 1",
+  "<b>Weight:</b> 14.2 kg",
+
+  "<hr>",
+
+  "<b>Sender Name:</b> Ariana Lemus",
+  "<b>Sender Address:</b> Sana'a Yemen",
+
+  "<hr>",
+
+  "<b>Receiver Name:</b> Thatayaone Malokwane",
+  "<b>Receiver Address:</b> Greater Palapye Diloro Village",
+  "<b>Receiver Number:</b> +26774608754"
+];
+
+function track(){
+
+  const input = document.getElementById("code")
+    .value
+    .trim()
+    .toUpperCase();
+
+  const loader = document.getElementById("loader");
+  const prog = document.getElementById("prog");
+  const result = document.getElementById("result");
+  const details = document.getElementById("details");
+
+  result.style.display="none";
+  details.innerHTML="";
+
+  loader.style.display="block";
+  prog.style.width="0%";
+
+  setTimeout(()=>{
+    prog.style.width="100%";
+  },30);
+
+  setTimeout(()=>{
+
+    loader.style.display="none";
+
+    if(input !== TRACK_CODE){
+      alert("❌ Invalid Tracking Number");
+      return;
+    }
+
+    result.style.display="block";
+
+    let delay = 0;
+
+    DETAILS.forEach(d=>{
+
+      setTimeout(()=>{
+
+        const div=document.createElement("div");
+
+        div.className="line";
+
+        div.innerHTML=d;
+
+        details.appendChild(div);
+
+        setTimeout(()=>{
+          div.classList.add("show");
+        },20);
+
+      },delay);
+
+      delay+=350;
+
+    });
+
+  },2200);
+
+}
+</script>
+
+</body>
+</html>
